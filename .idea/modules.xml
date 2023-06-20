@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/.idea/SGAB-main.iml" filepath="$PROJECT_DIR$/.idea/SGAB-main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/sgab-core/sgab-core.iml" filepath="$PROJECT_DIR$/sgab-core/sgab-core.iml" />
+      <module fileurl="file://$PROJECT_DIR$/sgab-view-web/sgab-view-web.iml" filepath="$PROJECT_DIR$/sgab-view-web/sgab-view-web.iml" />
+    </modules>
+  </component>
+</project>

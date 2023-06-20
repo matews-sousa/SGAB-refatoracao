@@ -1,0 +1,3 @@
+Digite seu e-mail
+Digite sua senha
+Digite seu nome
