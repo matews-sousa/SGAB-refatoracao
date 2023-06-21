@@ -74,11 +74,20 @@ public class AcervoDAO implements GenericDAO<Exemplar, Long>{
     public List<Exemplar> listarConsulta(Biblioteca biblioteca) {
         List<Exemplar> listExemplar = new ArrayList<>();
         
-        for (Exemplar exe: exemplares.values())
-            if (exe.getTipo() == ExemplarTipo.CONSULTA && exe.getStatus() != ExemplarStatus.DESATIVADA && exe.getBibliotecaPosse() == biblioteca)
+        for (Exemplar exe: exemplares.values()) {
+            if (exemplarDisponivelParaConsulta(exe, biblioteca))
                 listExemplar.add(exe);
+        }
         
         return listExemplar;
+    }
+
+    private boolean exemplarDisponivelParaConsulta(Exemplar exemplar, Biblioteca biblioteca) {
+        boolean tipoConsulta = exemplar.getTipo() == ExemplarTipo.CONSULTA;
+        boolean ativo = exemplar.getStatus() != ExemplarStatus.DESATIVADA;
+        boolean pertenceBiblioteca = exemplar.getBibliotecaPosse() == biblioteca;
+
+        return tipoConsulta && ativo && pertenceBiblioteca;
     }
     
     public List<Exemplar> listarTransferencia(Biblioteca biblioteca) {
