@@ -177,118 +177,13 @@ public class AquisicaoController {
             
             switch(etapa){
                 case "primeiro":
-                    String nomeObra = request.getParameter("nomeObra");
-                    List<Obra> obraAlvo = gestaoObra.pesquisarObraNome(nomeObra);
-
-                    String nomeBiblioteca = request.getParameter("biblioteca");
-                    nomeBiblioteca = nomeBiblioteca.split("::")[0];
-                    Biblioteca bibliotecaAlvo = gestaoBiblioteca.pesquisarProNome(nomeBiblioteca);
-
-                    request.getSession().setAttribute("bibliotecaAlvo", bibliotecaAlvo);
-                    
-                    Pessoa pessoaAlvo = (Pessoa) request.getSession().getAttribute("usuario");
-                    request.getSession().setAttribute("pessoaDona", pessoaAlvo);
-                    
-                    Long quantidade = null;
-                    String quantidadeString = request.getParameter("quantidade");
-                    if(!quantidadeString.isEmpty())
-                        quantidade = Long.parseLong(quantidadeString);
-                    
-                    String justificativa = request.getParameter("justificativa");
-                    if(!justificativa.isEmpty()){
-                        justificativa = "";
-                    }
-                    
-                    request.getSession().setAttribute("quantidadeAlvo", quantidade);
-                    request.getSession().setAttribute("justificativaAlvo", justificativa);
-                    
-                    if(obraAlvo.isEmpty()){
-                        request.setAttribute("nomeObra", nomeObra);
-                        jsp = "/core/aquisicoes/criarAquisicaoLeitor.jsp";
-                    }
-                    else{
-                        request.setAttribute("obras", obraAlvo);
-                        jsp="/core/aquisicoes/pedir-passo2.jsp";
-                    }
-                    
+                    jsp = handlePrimeiroEtapa(request, gestaoObra, gestaoBiblioteca);
                     break;
-                    
                 case "segundo":
-                    Pessoa pessoa = (Pessoa) request.getSession().getAttribute("pessoaDona");
-                    Biblioteca biblioteca = (Biblioteca) request.getSession().getAttribute("bibliotecaAlvo");
-                    Obra obra = (Obra) request.getSession().getAttribute("obraAlvo");
-                    Aquisicao aquisicao = new Aquisicao(biblioteca, pessoa, null, null, AquisicaoStatus.PENDENTE, obra);
-                    
-                    Long quantidade1 = (Long) request.getSession().getAttribute("quantidadeAlvo");
-                    String justificativa1 = (String) request.getSession().getAttribute("justificativaAlvo");
-                    
-                    if(quantidade1 != null && justificativa1 != ""){
-                        aquisicao.setQuantidade(quantidade1);
-                        aquisicao.setJustificativaQuantidade(justificativa1);
-                    }
-                    
-                    gestaoAquisicao.cadastrarAquisicao(aquisicao);
-                    jsp= "/core/aquisicoes/operacao-sucesso.jsp";
+                    jsp = handleSegundoEtapa(request, gestaoAquisicao);
                     break;
                 case "segundo-criarObra":
-                    Pessoa pessoa1 = (Pessoa) request.getSession().getAttribute("pessoaDona");
-                    Biblioteca biblioteca1 = (Biblioteca) request.getSession().getAttribute("bibliotecaAlvo");
-                    
-                    String tituloObra = request.getParameter("titulo");
-                    String categoriaObra = request.getParameter("categoria");
-                    String notaObra = request.getParameter("nota");
-                    
-                    List<Autor> autores = new LinkedList<>();
-                    String[] nomeAutores = request.getParameter("autores").split("::");
-                    if(!(nomeAutores.length == 1 && nomeAutores[0].equals(""))){
-                        for(String autor: nomeAutores){
-                            Autor alvo = gestaoAutor.pesquisarNome(autor);
-                            autores.add(alvo);
-                        }
-                    }
-                    List<Assunto> assuntos = new LinkedList<>();
-                    String[] nomeAssuntos = request.getParameter("assuntos").split("::");
-                    if(!(nomeAssuntos.length == 1 && nomeAssuntos[0].equals(""))){
-                        for(String assunto : nomeAssuntos){
-                            Assunto alvo = gestaoAssuntos.pesquisarAssunto(assunto);
-                            assuntos.add(alvo);
-                        }
-                    }
-                    
-                    String temp = request.getParameter("ano");
-                    Integer anoObra = null;
-                    if(!temp.equals(""))
-                        anoObra = Integer.parseInt(temp);
-                    
-                    String editoraObra = request.getParameter("editora");
-                    String cidadeEditoraObra = request.getParameter("cidEditora");
-                    
-                    temp = request.getParameter("edicao");
-                    Integer edicaoObra = null;
-                    if(!temp.equals(""))
-                        edicaoObra = Integer.parseInt(temp);
-                    
-                    temp = request.getParameter("volume");
-                    Integer volumeObra = null;
-                    if(!temp.equals(""))
-                        volumeObra = Integer.parseInt(temp);
-
-                    Obra obra1 = new Obra(categoriaObra, tituloObra, autores, assuntos, notaObra, anoObra, editoraObra, cidadeEditoraObra, edicaoObra, volumeObra);
-                    
-
-                    Aquisicao aquisicao1 = new Aquisicao(biblioteca1, pessoa1, null, null, AquisicaoStatus.PENDENTE, obra1);
-                    aquisicao1.setObraExiste(false);
-                    
-                    Long quantidade2 = (Long) request.getSession().getAttribute("quantidadeAlvo");
-                    String justificativa2 = (String) request.getSession().getAttribute("justificativaAlvo");
-                    
-                    if(quantidade2 != null && justificativa2 != ""){
-                        aquisicao1.setQuantidade(quantidade2);
-                        aquisicao1.setJustificativaQuantidade(justificativa2);
-                    }
-                    
-                    gestaoAquisicao.cadastrarAquisicao(aquisicao1);
-                    jsp= "/core/aquisicoes/operacao-sucesso.jsp";
+                    jsp = handleSegundoCriarObra(request, gestaoAutor, gestaoAssuntos, gestaoAquisicao);
                     break;
             }
         } catch (Exception e) {
@@ -296,6 +191,122 @@ public class AquisicaoController {
             jsp = "";
         }
         return jsp;
+    }
+
+    private static String handlePrimeiroEtapa(HttpServletRequest request, GestaoObras gestaoObra, GestaoBibliotecaService gestaoBiblioteca) {
+        String jsp = "";
+        String nomeObra = request.getParameter("nomeObra");
+        List<Obra> obraAlvo = gestaoObra.pesquisarObraNome(nomeObra);
+
+        String nomeBiblioteca = request.getParameter("biblioteca");
+        nomeBiblioteca = nomeBiblioteca.split("::")[0];
+        Biblioteca bibliotecaAlvo = gestaoBiblioteca.pesquisarProNome(nomeBiblioteca);
+
+        request.getSession().setAttribute("bibliotecaAlvo", bibliotecaAlvo);
+        
+        Pessoa pessoaAlvo = (Pessoa) request.getSession().getAttribute("usuario");
+        request.getSession().setAttribute("pessoaDona", pessoaAlvo);
+        
+        Long quantidade = null;
+        String quantidadeString = request.getParameter("quantidade");
+        if(!quantidadeString.isEmpty())
+            quantidade = Long.parseLong(quantidadeString);
+        
+        String justificativa = request.getParameter("justificativa");
+        if(!justificativa.isEmpty()){
+            justificativa = "";
+        }
+        
+        request.getSession().setAttribute("quantidadeAlvo", quantidade);
+        request.getSession().setAttribute("justificativaAlvo", justificativa);
+        
+        if(obraAlvo.isEmpty()){
+            request.setAttribute("nomeObra", nomeObra);
+            jsp = "/core/aquisicoes/criarAquisicaoLeitor.jsp";
+        }
+        else{
+            request.setAttribute("obras", obraAlvo);
+            jsp="/core/aquisicoes/pedir-passo2.jsp";
+        }
+        return jsp;
+    }
+
+    private static String handleSegundoEtapa(HttpServletRequest request, GestaoAquisicao gestaoAquisicao) {
+        Pessoa pessoa = (Pessoa) request.getSession().getAttribute("pessoaDona");
+        Biblioteca biblioteca = (Biblioteca) request.getSession().getAttribute("bibliotecaAlvo");
+        Obra obra = (Obra) request.getSession().getAttribute("obraAlvo");
+        Aquisicao aquisicao = new Aquisicao(biblioteca, pessoa, null, null, AquisicaoStatus.PENDENTE, obra);
+
+        Long quantidade1 = (Long) request.getSession().getAttribute("quantidadeAlvo");
+        String justificativa1 = (String) request.getSession().getAttribute("justificativaAlvo");
+
+        if(quantidade1 != null && justificativa1 != ""){
+            aquisicao.setQuantidade(quantidade1);
+            aquisicao.setJustificativaQuantidade(justificativa1);
+        }
+
+        gestaoAquisicao.cadastrarAquisicao(aquisicao);
+        return "/core/aquisicoes/operacao-sucesso.jsp";
+    }
+
+    private static String handleSegundoCriarObra(HttpServletRequest request, GestaoAutor gestaoAutor, GestaoAssuntoService gestaoAssuntos, GestaoAquisicao gestaoAquisicao) {
+        Pessoa pessoa1 = (Pessoa) request.getSession().getAttribute("pessoaDona");
+        Biblioteca biblioteca1 = (Biblioteca) request.getSession().getAttribute("bibliotecaAlvo");
+
+        String tituloObra = request.getParameter("titulo");
+        String categoriaObra = request.getParameter("categoria");
+        String notaObra = request.getParameter("nota");
+
+        List<Autor> autores = new LinkedList<>();
+        String[] nomeAutores = request.getParameter("autores").split("::");
+        if(!(nomeAutores.length == 1 && nomeAutores[0].equals(""))){
+            for(String autor: nomeAutores){
+                Autor alvo = gestaoAutor.pesquisarNome(autor);
+                autores.add(alvo);
+            }
+        }
+        List<Assunto> assuntos = new LinkedList<>();
+        String[] nomeAssuntos = request.getParameter("assuntos").split("::");
+        if(!(nomeAssuntos.length == 1 && nomeAssuntos[0].equals(""))){
+            for(String assunto : nomeAssuntos){
+                Assunto alvo = gestaoAssuntos.pesquisarAssunto(assunto);
+                assuntos.add(alvo);
+            }
+        }
+
+        String temp = request.getParameter("ano");
+        Integer anoObra = null;
+        if(!temp.equals(""))
+            anoObra = Integer.parseInt(temp);
+
+        String editoraObra = request.getParameter("editora");
+        String cidadeEditoraObra = request.getParameter("cidEditora");
+
+        temp = request.getParameter("edicao");
+        Integer edicaoObra = null;
+        if(!temp.equals(""))
+            edicaoObra = Integer.parseInt(temp);
+
+        temp = request.getParameter("volume");
+        Integer volumeObra = null;
+        if(!temp.equals(""))
+            volumeObra = Integer.parseInt(temp);
+
+        Obra obra1 = new Obra(categoriaObra, tituloObra, autores, assuntos, notaObra, anoObra, editoraObra, cidadeEditoraObra, edicaoObra, volumeObra);
+
+        Aquisicao aquisicao1 = new Aquisicao(biblioteca1, pessoa1, null, null, AquisicaoStatus.PENDENTE, obra1);
+        aquisicao1.setObraExiste(false);
+
+        Long quantidade2 = (Long) request.getSession().getAttribute("quantidadeAlvo");
+        String justificativa2 = (String) request.getSession().getAttribute("justificativaAlvo");
+
+        if(quantidade2 != null && justificativa2 != ""){
+            aquisicao1.setQuantidade(quantidade2);
+            aquisicao1.setJustificativaQuantidade(justificativa2);
+        }
+
+        gestaoAquisicao.cadastrarAquisicao(aquisicao1);
+        return "/core/aquisicoes/operacao-sucesso.jsp";
     }
 
     public static String gravarAquisicaoBibliotecario(HttpServletRequest request) {
