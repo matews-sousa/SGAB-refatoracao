@@ -134,7 +134,7 @@ public class AcervoDAO implements GenericDAO<Exemplar, Long>{
     public List<Exemplar> listarAcervoParaReserva(){
         List<Exemplar> resultados = new LinkedList<>();
         for(Exemplar exemplar : exemplares.values()){
-            if( exemplar.getStatus() != ExemplarStatus.DESATIVADA && exemplar.getStatus() != ExemplarStatus.REPARO && exemplar.getStatus() != ExemplarStatus.TRANSFERENCIA && exemplar.getTipo() == ExemplarTipo.NORMAL){
+            if(exemplarDisponivelParaReserva(exemplar)){
                 resultados.add(exemplar);
             }
         }
@@ -144,7 +144,7 @@ public class AcervoDAO implements GenericDAO<Exemplar, Long>{
     public List<Exemplar> listarAcervoParaReserva(String titulo){
         List<Exemplar> resultados = new LinkedList<>();
         for(Exemplar exemplar : exemplares.values()){
-            if(checaSemelhanca(exemplar.getObra().getTitulo(), titulo) && exemplar.getStatus() != ExemplarStatus.DESATIVADA && exemplar.getStatus() != ExemplarStatus.REPARO && exemplar.getStatus() != ExemplarStatus.TRANSFERENCIA && exemplar.getTipo() == ExemplarTipo.NORMAL){
+            if(checaSemelhanca(exemplar.getObra().getTitulo(), titulo) && exemplarDisponivelParaReserva(exemplar)){
                 resultados.add(exemplar);
             }
         }
@@ -154,7 +154,7 @@ public class AcervoDAO implements GenericDAO<Exemplar, Long>{
     public List<Exemplar> listarAcervoParaReserva(Autor autor){
         List<Exemplar> resultados = new LinkedList<>();
         for(Exemplar exemplar : exemplares.values()){
-            if(exemplar.getObra().getAutor().equals(autor) && exemplar.getStatus() != ExemplarStatus.DESATIVADA && exemplar.getStatus() != ExemplarStatus.REPARO && exemplar.getStatus() != ExemplarStatus.TRANSFERENCIA && exemplar.getTipo() == ExemplarTipo.NORMAL){
+            if(exemplar.getObra().getAutor().equals(autor) && exemplarDisponivelParaReserva(exemplar)) {
                 resultados.add(exemplar);
             }
         }
@@ -164,11 +164,22 @@ public class AcervoDAO implements GenericDAO<Exemplar, Long>{
     public List<Exemplar> listarAcervoParaReserva(Biblioteca biblioteca){
         List<Exemplar> resultados = new LinkedList<>();
         for(Exemplar exemplar : exemplares.values()){
-            if(exemplar.getBibliotecaPosse().equals(biblioteca) && exemplar.getStatus() != ExemplarStatus.DESATIVADA && exemplar.getStatus() != ExemplarStatus.REPARO && exemplar.getStatus() != ExemplarStatus.TRANSFERENCIA && exemplar.getTipo() == ExemplarTipo.NORMAL){
+            if(exemplar.getBibliotecaPosse().equals(biblioteca) && exemplarDisponivelParaReserva(exemplar)){
                 resultados.add(exemplar);
             }
         }
         return resultados;
+    }
+
+    private boolean exemplarDisponivelParaReserva(Exemplar exemplar) {
+        ExemplarStatus status = exemplar.getStatus();
+        ExemplarTipo tipo = exemplar.getTipo();
+        boolean ativo = status != ExemplarStatus.DESATIVADA;
+        boolean reparo = status != ExemplarStatus.REPARO;
+        boolean transferencia = status != ExemplarStatus.TRANSFERENCIA;
+        boolean normal = tipo == ExemplarTipo.NORMAL;
+
+       return ativo && reparo && transferencia && normal;
     }
      
     private boolean checaSemelhanca(String nomeObra, String nomeInput){
