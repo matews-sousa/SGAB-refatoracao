@@ -25,6 +25,7 @@ import sgab.model.dto.Pessoa;
  */
 public class ReservaDAO implements GenericDAO<Reserva, Long> {
     private Map<Long, Reserva> table = new HashMap<>();
+    private static final int MAX_HORAS_DIFERENCA = 2;
     
     private static ReservaDAO reservaDAO;
     static {
@@ -84,7 +85,7 @@ public class ReservaDAO implements GenericDAO<Reserva, Long> {
                     long diffInMillis = dataAtual.getTime() - horarioReservaDate.getTime();
                     long diffInHours = TimeUnit.MILLISECONDS.toHours(diffInMillis);
 
-                    if (diffInHours <= 2) {
+                    if (diffInHours <= MAX_HORAS_DIFERENCA) {
                         delete(reserva.getId());
                     }
                 } catch (ParseException e) {
