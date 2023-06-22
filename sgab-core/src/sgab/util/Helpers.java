@@ -1,6 +1,7 @@
 package sgab.util;
 
 public class Helpers {
+    static private final float LIMITE_SIMILARIDADE = 0.21f;
     public static boolean checaSemelhanca(String nomeObra, String nomeInput){
         String nomeA = nomeObra.toLowerCase();
         String nomeB = nomeInput.toLowerCase();
@@ -29,7 +30,7 @@ public class Helpers {
         }
         float porcentagem = count / nomeA.length();
 
-        if(porcentagem < 0.21)
+        if(porcentagem < LIMITE_SIMILARIDADE)
             return true;
 
         return false;
