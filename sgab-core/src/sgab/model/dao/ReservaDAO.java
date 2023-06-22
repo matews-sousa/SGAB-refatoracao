@@ -4,6 +4,7 @@
  */
 package sgab.model.dao;
 import java.text.DateFormat;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import sgab.model.dto.Reserva;
 import sgab.model.exception.PersistenciaException;
@@ -12,6 +13,8 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
+
 import sgab.model.dto.Biblioteca;
 import sgab.model.dto.Exemplar;
 import sgab.model.dto.Obra;
@@ -69,26 +72,23 @@ public class ReservaDAO implements GenericDAO<Reserva, Long> {
     
     public List<Reserva> listarTodos() {
         List<Reserva> listReservas = new ArrayList<>();
-        
+        Date dataAtual = new Date();
+        DateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy - HH:mm:ss");
+
         for(Reserva reserva : table.values()){
             if(reserva.getEraDisponivel()){
-                Date date = new Date();
-                DateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy - HH:mm:ss");
-                String dataAtual = dateFormat.format(date);
-                
-                String[] dateAlvo = reserva.getHorario().split("/");
-                String[] dateAtual = dataAtual.split("/");
-                
-                String[] dateAlvo2 = dateAlvo[2].split(" ");
-                String[] dateAtual2 = dateAtual[2].split(" ");
-                
-                String[] dateAlvo3 = dateAlvo2[2].split(":");
-                String[] dateAtual3 = dateAlvo2[2].split(":");
-                
-                int horaAlvo = Integer.parseInt(dateAlvo3[0]);
-                int horaAtual = Integer.parseInt(dateAtual3[0]);
-                if(dateAtual[0] != dateAlvo[0] || dateAtual[1] != dateAlvo[1] || dateAlvo2[0] != dateAtual2[0] || horaAtual-horaAlvo >= 2){
-                    delete(reserva.getId());
+                try {
+                    String horarioReserva = reserva.getHorario();
+                    Date horarioReservaDate = dateFormat.parse(horarioReserva);
+
+                    long diffInMillis = dataAtual.getTime() - horarioReservaDate.getTime();
+                    long diffInHours = TimeUnit.MILLISECONDS.toHours(diffInMillis);
+
+                    if (diffInHours <= 2) {
+                        delete(reserva.getId());
+                    }
+                } catch (ParseException e) {
+                    e.printStackTrace();
                 }
             }
             listReservas.add(reserva);
