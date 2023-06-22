@@ -11,12 +11,14 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import sgab.model.dto.Exemplar;
+import sgab.model.dto.util.AcervoHelper;
 import sgab.model.dto.util.ExemplarStatus;
 import sgab.model.dto.util.ExemplarTipo;
 import sgab.model.exception.PersistenciaException;
 import java.util.ArrayList;
 import sgab.model.dto.Autor;
 import sgab.model.dto.Biblioteca;
+import sgab.util.Helpers;
 
 public class AcervoDAO implements GenericDAO<Exemplar, Long>{
     private Map<Long, Exemplar> exemplares = new HashMap<>();
@@ -75,19 +77,11 @@ public class AcervoDAO implements GenericDAO<Exemplar, Long>{
         List<Exemplar> listExemplar = new ArrayList<>();
         
         for (Exemplar exe: exemplares.values()) {
-            if (exemplarDisponivelParaConsulta(exe, biblioteca))
+            if (AcervoHelper.exemplarDisponivelParaConsulta(exe, biblioteca))
                 listExemplar.add(exe);
         }
         
         return listExemplar;
-    }
-
-    private boolean exemplarDisponivelParaConsulta(Exemplar exemplar, Biblioteca biblioteca) {
-        boolean tipoConsulta = exemplar.getTipo() == ExemplarTipo.CONSULTA;
-        boolean ativo = exemplar.getStatus() != ExemplarStatus.DESATIVADA;
-        boolean pertenceBiblioteca = exemplar.getBibliotecaPosse() == biblioteca;
-
-        return tipoConsulta && ativo && pertenceBiblioteca;
     }
     
     public List<Exemplar> listarTransferencia(Biblioteca biblioteca) {
@@ -134,7 +128,7 @@ public class AcervoDAO implements GenericDAO<Exemplar, Long>{
     public List<Exemplar> listarAcervoParaReserva(){
         List<Exemplar> resultados = new LinkedList<>();
         for(Exemplar exemplar : exemplares.values()){
-            if(exemplarDisponivelParaReserva(exemplar)){
+            if(AcervoHelper.exemplarDisponivelParaReserva(exemplar)){
                 resultados.add(exemplar);
             }
         }
@@ -144,7 +138,8 @@ public class AcervoDAO implements GenericDAO<Exemplar, Long>{
     public List<Exemplar> listarAcervoParaReserva(String titulo){
         List<Exemplar> resultados = new LinkedList<>();
         for(Exemplar exemplar : exemplares.values()){
-            if(checaSemelhanca(exemplar.getObra().getTitulo(), titulo) && exemplarDisponivelParaReserva(exemplar)){
+            if(Helpers.checaSemelhanca(exemplar.getObra().getTitulo(), titulo)
+                    && AcervoHelper.exemplarDisponivelParaReserva(exemplar)){
                 resultados.add(exemplar);
             }
         }
@@ -154,7 +149,8 @@ public class AcervoDAO implements GenericDAO<Exemplar, Long>{
     public List<Exemplar> listarAcervoParaReserva(Autor autor){
         List<Exemplar> resultados = new LinkedList<>();
         for(Exemplar exemplar : exemplares.values()){
-            if(exemplar.getObra().getAutor().equals(autor) && exemplarDisponivelParaReserva(exemplar)) {
+            if(exemplar.getObra().getAutor().equals(autor)
+                    && AcervoHelper.exemplarDisponivelParaReserva(exemplar)) {
                 resultados.add(exemplar);
             }
         }
@@ -164,55 +160,10 @@ public class AcervoDAO implements GenericDAO<Exemplar, Long>{
     public List<Exemplar> listarAcervoParaReserva(Biblioteca biblioteca){
         List<Exemplar> resultados = new LinkedList<>();
         for(Exemplar exemplar : exemplares.values()){
-            if(exemplar.getBibliotecaPosse().equals(biblioteca) && exemplarDisponivelParaReserva(exemplar)){
+            if(exemplar.getBibliotecaPosse().equals(biblioteca) && AcervoHelper.exemplarDisponivelParaReserva(exemplar)){
                 resultados.add(exemplar);
             }
         }
         return resultados;
-    }
-
-    private boolean exemplarDisponivelParaReserva(Exemplar exemplar) {
-        ExemplarStatus status = exemplar.getStatus();
-        ExemplarTipo tipo = exemplar.getTipo();
-        boolean ativo = status != ExemplarStatus.DESATIVADA;
-        boolean reparo = status != ExemplarStatus.REPARO;
-        boolean transferencia = status != ExemplarStatus.TRANSFERENCIA;
-        boolean normal = tipo == ExemplarTipo.NORMAL;
-
-       return ativo && reparo && transferencia && normal;
-    }
-     
-    private boolean checaSemelhanca(String nomeObra, String nomeInput){
-        String nomeA = nomeObra.toLowerCase();
-        String nomeB = nomeInput.toLowerCase();
-        float count = 0;
-        
-        //iguala o tamanho das Strings
-        if(nomeA.length() > nomeB.length()){
-            for(int i =0; i < (nomeObra.length() - nomeInput.length()); i++){
-                nomeB = nomeB.concat(" ");
-            }
-        }
-        if(nomeA.length() < nomeB.length()){
-            for(int i =0; i < (nomeObra.length() - nomeInput.length()); i++){
-                nomeA = nomeA.concat(" ");
-            }
-        }
-        
-        for(int i=0, j=0; i<nomeA.length(); i++, j++) { 
-            if(nomeA.charAt(i) != nomeB.charAt(j)){
-                count++;
-                if(i+1 == nomeA.length())
-                    continue;
-                if(nomeA.charAt(i+1)==nomeB.charAt(j))
-                    j--;
-            }
-        }
-        float porcentagem = count / nomeA.length();
-        
-        if(porcentagem < 0.21)
-            return true;
-        
-        return false;
     }
 }
